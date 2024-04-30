@@ -2,6 +2,7 @@ package com.project.tklembackend.service.admin;
 
 import com.project.tklembackend.config.TradeWebSocketHandler;
 import com.project.tklembackend.dto.MessageDTO;
+import com.project.tklembackend.dto.ParentDTO;
 import com.project.tklembackend.dto.RecieverDTO;
 import com.project.tklembackend.model.*;
 import com.project.tklembackend.repository.*;
@@ -66,7 +67,7 @@ public class AdminRecieverService {
         UserEntity userEntity = reciever.getUserEntity();
         userEntity.setEmail(recieverDTO.getEmail());
         userEntity.setEnabled(recieverDTO.getStatus());
-        userEntity.setPassword(bCryptPasswordEncoder.encode(recieverDTO.getPassword()));
+        //userEntity.setPassword(bCryptPasswordEncoder.encode(recieverDTO.getPassword()));
         userEntityRepository.save(userEntity);
 
     }
@@ -129,5 +130,10 @@ public class AdminRecieverService {
         studentLog.setMassarCode(messageDTO.getMassarCode());
         studentLog.setFormationName(messageDTO.getFormationName());
         studentLogRepository.save(studentLog);
+    }
+    public void editReceiverPassword(RecieverDTO recieverDTO) {
+        UserEntity user = this.userEntityRepository.findByEmail(recieverDTO.getEmail()).get();
+        user.setPassword(this.bCryptPasswordEncoder.encode(recieverDTO.getPassword()));
+        userEntityRepository.save(user);
     }
 }

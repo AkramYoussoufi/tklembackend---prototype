@@ -1,5 +1,6 @@
 package com.project.tklembackend.service.admin;
 
+import com.project.tklembackend.dto.ParentDTO;
 import com.project.tklembackend.dto.ReceptorDTO;
 import com.project.tklembackend.model.Receptor;
 import com.project.tklembackend.model.UserEntity;
@@ -84,11 +85,15 @@ public class AdminReceptorService {
         userEntity.setRole( roleRepository.findById(2L).get());
         userEntity.setReceptor(receptor);
         userEntity.setEnabled(receptorDTO.getStatus());
-        userEntity.setPassword(bCryptPasswordEncoder.encode(receptorDTO.getPassword()));
+      //  userEntity.setPassword(bCryptPasswordEncoder.encode(receptorDTO.getPassword()));
         userEntityRepository.save(userEntity);
         receptor.setUserEntity(userEntity);
         return convertToDTO(receptor);
     }
-
+    public void editReceptorPassword(ReceptorDTO receptorDTO) {
+        UserEntity user = this.userEntityRepository.findByEmail(receptorDTO.getEmail()).get();
+        user.setPassword(this.bCryptPasswordEncoder.encode(receptorDTO.getPassword()));
+        userEntityRepository.save(user);
+    }
 
 }

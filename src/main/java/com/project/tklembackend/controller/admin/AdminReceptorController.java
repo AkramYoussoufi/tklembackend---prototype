@@ -1,5 +1,6 @@
 package com.project.tklembackend.controller.admin;
 
+import com.project.tklembackend.dto.ParentDTO;
 import com.project.tklembackend.dto.ReceptorDTO;
 import com.project.tklembackend.service.GlobalService;
 import com.project.tklembackend.service.admin.AdminReceptorService;
@@ -8,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -42,5 +44,13 @@ public class AdminReceptorController {
     public ResponseEntity<Map<String,String>> deleteReceptor(@RequestBody List<Map<String,Long>> request){
         request.forEach(id->{adminReceptorService.deleteReceptors(id.get("id"));});
         return new ResponseEntity<>(globalService.responseBuilder("entity deleted Successfully"), HttpStatus.OK);
+    }
+
+    @PostMapping("/edit-password")
+    public ResponseEntity<Map<String,String>> editParentPassword(@RequestBody ReceptorDTO receptorDTO){
+        adminReceptorService.editReceptorPassword(receptorDTO);
+        Map<String,String> response = new HashMap<>();
+        response.put("message","Receptor Password has successfully modified");
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 }

@@ -1,5 +1,6 @@
 package com.project.tklembackend.controller.admin;
 
+import com.project.tklembackend.dto.RecieverDTO;
 import com.project.tklembackend.dto.StudentDTO;
 import com.project.tklembackend.model.Student;
 import com.project.tklembackend.model.StudentLog;
@@ -69,4 +70,5 @@ public class AdminStudentController {
     public ResponseEntity<List<StudentLog>> getAllStudentLogs(){
         return new ResponseEntity<>(studentLogRepository.findAll(),HttpStatus.OK);
     }
+
 }

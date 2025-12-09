@@ -34,11 +34,19 @@ public class SecurityConfig {
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
 
-        http.authorizeHttpRequests(request->
-                request.requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/socket/**").permitAll()
-                        .anyRequest().authenticated()
-        );
+        http.authorizeHttpRequests(request ->
+        request
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/socket/**").permitAll()
+
+                // --- Swagger/OpenAPI public access ---
+                .requestMatchers(
+                        "/swagger-ui/**",
+                ).permitAll()
+                // -------------------------------------
+
+                .anyRequest().authenticated()
+);
 
 
         return http.build();

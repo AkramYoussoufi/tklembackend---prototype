@@ -28,29 +28,59 @@ public class JWTFilter extends OncePerRequestFilter {
     private final UserEntityRepository userEntityRepository;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        if(!request.getRequestURI().contains("/api/auth/") && !request.getRequestURI().contains("socket") ){
-            String token = request.getHeader("AUTHORIZATION").replace("Bearer ","");
-            String extractedToken = jwtService.extractJWT(token);
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
+            throws ServletException, IOException {
 
-            UserEntity user = userEntityRepository.findByEmail(extractedToken).orElseThrow(
-                    () -> new NoSuchElementException("User not found for email: " +extractedToken)
-            );
+        String uri = request.getRequestURI();
 
-            Roles userRole = user.getRole().getRoleName();
-
-            //If the request are for the dashboard they will be blocked if the user is not from ADMIN role before it processed.
-            if(request.getRequestURI().contains("admin") && !userRole.equals(Roles.ADMIN)){
-                throw new AuthorizationServiceException("this user is not authorized to perform the request");
-            }
-
-            if(user.isEnabled()){
-                Authentication authentication = new UsernamePasswordAuthenticationToken(user,null,user.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            }else{
-                throw new DisabledException("Account is disabled");
-            }
+        // Allow public endpoints (auth, socket, swagger)
+        if (uri.contains("/api/auth/")
+                || uri.contains("/socket")
+                || uri.startsWith("/v3/api-docs")
+                || uri.startsWith("/swagger-ui")
+                || uri.startsWith("/swagger-resources")
+                || uri.startsWith("/webjars")
+        ) {
+            filterChain.doFilter(request, response);
+            return;
         }
-        filterChain.doFilter(request,response);
+
+        // Retrieve Authorization header
+        String authHeader = request.getHeader("Authorization");
+
+        // If no Authorization header → skip authentication
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // Extract token after "Bearer "
+        String token = authHeader.substring(7);
+        String extractedToken = jwtService.extractJWT(token);
+
+        // Load user
+        UserEntity user = userEntityRepository.findByEmail(extractedToken)
+                .orElseThrow(() -> new NoSuchElementException("User not found for email: " + extractedToken));
+
+        Roles userRole = user.getRole().getRoleName();
+
+        // Authorization logic for admin-only endpoints
+        if (uri.contains("admin") && !userRole.equals(Roles.ADMIN)) {
+            throw new AuthorizationServiceException("This user is not authorized to perform this request");
+        }
+
+        // If user is enabled, authenticate
+        if (user.isEnabled()) {
+            Authentication authentication =
+                    new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+        } else {
+            throw new DisabledException("Account is disabled");
+        }
+
+        filterChain.doFilter(request, response);
     }
 }
